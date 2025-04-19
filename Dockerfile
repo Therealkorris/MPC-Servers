@@ -2,12 +2,12 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy requirements.txt first for better layer caching
-COPY src/backend/requirements.txt ./requirements.txt
+# Copy requirements file for Docker
+COPY docker-requirements.txt ./requirements.txt
 
-# Install dependencies but exclude win32com (Visio-related) packages
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install sse-starlette
+# Install dependencies
+RUN pip install --no-cache-dir setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy the server code
 COPY src/backend/server.py ./backend/server.py

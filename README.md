@@ -7,7 +7,7 @@ This is an MPC (Messenger Communication Protocol) server for Microsoft Visio, pr
 1. Install Python 3.9 or newer if not already installed
 2. Install the required dependencies:
    ```
-   pip install -r src/backend/requirements.txt
+   pip install -r requirements.txt
    ```
 
 ## Running the MPC Server
@@ -47,6 +47,33 @@ make backend
 # Run MPC server
 make mpc
 ```
+
+### Using Docker
+
+You can run the MPC server in Docker using the provided Dockerfile and docker-compose.yml:
+
+```
+# Build the Docker image
+make docker-build
+
+# Run the Docker container
+make docker-run
+
+# Stop the Docker container
+make docker-stop
+```
+
+Alternatively, you can use Docker Compose directly:
+
+```
+# Build and run
+docker compose up -d
+
+# Stop
+docker compose down
+```
+
+Note: The Docker container will not have access to Microsoft Visio. It's primarily intended for running the backend services that don't require direct Visio interaction. For full functionality including Visio automation, run the server directly on your Windows machine.
 
 ## MPC Configuration
 

@@ -89,6 +89,10 @@ async def process_message(message: Dict[str, Any]) -> Dict[str, Any]:
             )
             return {"result": result}
         
+        elif mcp_method == "get_active_document":
+            result = visio_service.get_active_document()
+            return {"result": result}
+        
         elif mcp_method == "ask_ai_about_visio":
             responses = []
             

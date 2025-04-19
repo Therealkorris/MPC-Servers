@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mpc-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mpc-visio-server
+    container_name: mpc-visio-server
+    ports:
+      - "8050:8050"  # MPC Server port
+      - "8051:8051"  # Backend port
+    volumes:
+      - ./src:/app/src
+      - ./examples:/app/examples
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["--transport", "sse", "--host", "0.0.0.0", "--port", "8050"] 

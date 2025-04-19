@@ -28,6 +28,8 @@ class VisioService:
                 logger.info("Starting Microsoft Visio application...")
                 self.visio_app = win32com.client.GetObject("Visio.Application")
                 logger.info("Connected to existing Microsoft Visio application.")
+                # Make sure Visio is visible
+                self.visio_app.Visible = 1
             except:
                 try:
                     logger.info("No existing Visio application found. Starting a new one...")
@@ -38,6 +40,9 @@ class VisioService:
                 except Exception as e:
                     logger.error(f"Failed to start Microsoft Visio application: {e}")
                     raise RuntimeError(f"Failed to start Microsoft Visio application: {e}")
+        else:
+            # Ensure Visio is visible even if we already have a reference
+            self.visio_app.Visible = 1
     
     def _close_visio_app(self):
         """Close the Visio application."""
@@ -182,6 +187,9 @@ class VisioService:
                 file_path = file_path_or_content
                 # Try to get an already open document
                 doc, should_close_doc = self._get_or_open_document(file_path)
+                # Make Visio visible in case it's not
+                self.visio_app.Visible = 1
+                # No Activate() call - it's not needed and can cause errors
             else:
                 # Assume it's base64 content and save to temp file
                 binary_content = base64.b64decode(file_path_or_content)
@@ -193,6 +201,8 @@ class VisioService:
                 # Open the document
                 doc = self.visio_app.Documents.Open(file_path)
                 should_close_doc = True
+                # Make Visio visible
+                self.visio_app.Visible = 1
             
             analysis_results = {}
             
@@ -223,16 +233,17 @@ class VisioService:
             }
             
         finally:
-            # Clean up
-            if doc is not None and should_close_doc:
-                try:
-                    doc.Close()
-                except:
-                    pass
-            
+            # Clean up temp files, but don't close the document if it was already open
             if temp_file is not None:
                 try:
                     os.unlink(temp_file.name)
+                except:
+                    pass
+                
+            # Only close the document if it was opened by this function call
+            if doc is not None and should_close_doc and temp_file is not None:
+                try:
+                    doc.Close()
                 except:
                     pass
     
@@ -380,6 +391,9 @@ class VisioService:
                 file_path = file_path_or_content
                 # Try to get an already open document
                 doc, should_close_doc = self._get_or_open_document(file_path)
+                # Make Visio visible in case it's not
+                self.visio_app.Visible = 1
+                # No Activate() call - it's not needed and can cause errors
             else:
                 # Assume it's base64 content and save to temp file
                 is_content = True
@@ -392,6 +406,8 @@ class VisioService:
                 # Open the document
                 doc = self.visio_app.Documents.Open(file_path)
                 should_close_doc = True
+                # Make Visio visible
+                self.visio_app.Visible = 1
             
             # Apply modifications based on instructions
             if "add_shapes" in modification_instructions:
@@ -441,16 +457,17 @@ class VisioService:
             }
             
         finally:
-            # Clean up
-            if doc is not None and should_close_doc:
-                try:
-                    doc.Close()
-                except:
-                    pass
-            
+            # Clean up temp files, but don't close the document if it was already open
             if temp_file is not None:
                 try:
                     os.unlink(temp_file.name)
+                except:
+                    pass
+                
+            # Only close the document if it was opened by this function call
+            if doc is not None and should_close_doc and temp_file is not None:
+                try:
+                    doc.Close()
                 except:
                     pass
     
@@ -777,12 +794,28 @@ class VisioService:
                     "message": "No active Visio document found."
                 }
             
-            return {
+            # Make sure Visio is visible
+            self.visio_app.Visible = 1
+            
+            # Get information about the document without activating it
+            doc_info = {
                 "status": "success",
                 "file_path": doc.FullName,
                 "name": doc.Name,
+                "pages_count": doc.Pages.Count,
                 "message": f"Active document: {doc.Name}"
             }
+            
+            # Get basic information about pages
+            doc_info["pages"] = []
+            for i in range(1, doc.Pages.Count + 1):
+                page = doc.Pages.Item(i)
+                doc_info["pages"].append({
+                    "name": page.Name,
+                    "shapes_count": page.Shapes.Count
+                })
+            
+            return doc_info
             
         except Exception as e:
             logger.exception(f"Error getting active document: {e}")
@@ -814,6 +847,9 @@ class VisioService:
                 file_path = file_path_or_content
                 # Try to get an already open document
                 doc, should_close_doc = self._get_or_open_document(file_path)
+                # Make Visio visible in case it's not
+                self.visio_app.Visible = 1
+                # No Activate() call - it's not needed and can cause errors
             else:
                 # Assume it's base64 content and save to temp file
                 binary_content = base64.b64decode(file_path_or_content)
@@ -825,6 +861,8 @@ class VisioService:
                 # Open the document
                 doc = self.visio_app.Documents.Open(file_path)
                 should_close_doc = True
+                # Make Visio visible
+                self.visio_app.Visible = 1
             
             # Get connections analysis
             connections_analysis = self._analyze_diagram_connections(doc)
@@ -871,16 +909,17 @@ class VisioService:
             }
             
         finally:
-            # Clean up
-            if doc is not None and should_close_doc:
-                try:
-                    doc.Close()
-                except:
-                    pass
-            
+            # Clean up temp files, but don't close the document if it was already open
             if temp_file is not None:
                 try:
                     os.unlink(temp_file.name)
+                except:
+                    pass
+                
+            # Only close the document if it was opened by this function call
+            if doc is not None and should_close_doc and temp_file is not None:
+                try:
+                    doc.Close()
                 except:
                     pass
     

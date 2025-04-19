@@ -141,6 +141,13 @@ async def process_stream_message(message: Dict[str, Any]):
         yield {"error": {"code": -32603, "message": f"Internal error: {str(e)}"}}
 
 
+# Simple health check endpoint for Docker
+@app.get("/health")
+async def health_check():
+    """Simple health check endpoint for Docker."""
+    return {"status": "healthy", "service": "MPC Visio"}
+
+
 # SSE Transport
 @app.post("/sse")
 async def sse_endpoint(request: Request):

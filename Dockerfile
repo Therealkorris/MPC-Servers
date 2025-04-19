@@ -2,12 +2,16 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Copy requirements.txt first for better layer caching
 COPY src/backend/requirements.txt ./requirements.txt
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install sse-starlette requests
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install sse-starlette requests
 
 # Copy the server code
 COPY src/backend/server.py ./backend/server.py

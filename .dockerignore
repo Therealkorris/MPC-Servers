@@ -35,24 +35,27 @@ env/
 *.swp
 *.swo
 
-# Docker
-Dockerfile
+# Docker files not needed in build context
 docker-compose.yml
 .dockerignore
 
 # Example files
-examples/
+examples/*.vsdx
 
 # Test files
 **/tests/
 .coverage
 htmlcov/
 
-# Local scripts that use Visio
+# Local scripts that use Visio (don't exclude run_visio_service.py)
 edit_visio.py
 test_visio.py
 test_connect.py
 
 # Documentation
 *.md
-LICENSE 
+LICENSE
+
+# Don't exclude requirements.txt or necessary modules
+!requirements.txt
+!src/backend/requirements.txt 

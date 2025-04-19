@@ -1,0 +1,12 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# MPC Servers Project Overview
+
+This project implements a server for Microsoft Visio that provides:
+
+1. A FastAPI backend that exposes an API for interacting with Visio diagrams
+2. Support for analyzing and modifying Visio diagrams programmatically
+3. Multiple deployment options (Docker or local)

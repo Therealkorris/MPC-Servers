@@ -1,0 +1,49 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Testing Utilities
+
+The MPC Servers project includes several testing utilities to verify functionality:
+
+## Test Scripts
+
+- **test_visio.py**: [test_visio.py](mdc:test_visio.py) - Tests Visio diagram analysis and modification
+- **test_connect.py**: [test_connect.py](mdc:test_connect.py) - Tests adding connections between shapes
+- **test_mpc.py**: [test_mpc.py](mdc:test_mpc.py) - Basic API tests for the MPC server
+- **test-docker-setup.py**: [test-docker-setup.py](mdc:test-docker-setup.py) - Verifies Docker setup
+
+## Example Files
+
+- **test1.vsdx**: [examples/test1.vsdx](mdc:examples/test1.vsdx) - Example Visio diagram for testing
+- **mpc_client.js**: [examples/mpc_client.js](mdc:examples/mpc_client.js) - JavaScript client example
+- **mpc_client.py**: [examples/mpc_client.py](mdc:examples/mpc_client.py) - Python client example
+
+## How Testing Works
+
+1. The test scripts connect to the MPC server using the SSE transport
+2. They send requests to analyze or modify Visio diagrams
+3. The server processes these requests through the Visio service
+4. Results are returned as SSE events
+
+## API Request Format
+
+Test scripts use this JSON-RPC style format:
+```json
+{
+  "id": "unique-id",
+  "method": "method_name",
+  "params": {
+    "param1": "value1",
+    "param2": "value2"
+  }
+}
+```
+
+## Common Test Methods
+
+- `analyze_visio_diagram` - Get information about a diagram
+- `modify_visio_diagram` - Make changes to a diagram
+- `verify_connections` - Check if connections exist
+- `get_active_document` - Get the currently open Visio document

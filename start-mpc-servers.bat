@@ -76,36 +76,68 @@ echo Starting both services in Docker...
 echo.
 echo Using Windows containers for Visio service...
 
-REM Check if images exist
-echo Building MPC Server Docker image...
-docker build -t mpc-server -f Dockerfile .
+REM Clean up any existing containers first
+echo Stopping and removing any existing containers...
+docker-compose -f docker-compose.full.yml down 2>nul
+docker stop mpc-server visio-service 2>nul
+docker rm -f mpc-server visio-service 2>nul
 
-echo Building Visio Service Docker image...
-docker build -t visio-service -f Dockerfile.visio .
+REM Create the Docker network if it doesn't exist
+echo Ensuring the Docker network exists...
+docker network inspect mpc-network >nul 2>&1 || docker network create --driver bridge mpc-network
 
-REM Verify images exist
+REM Build the Docker images
+echo Building Docker images...
+docker build -t mpc-server -f Dockerfile.win . || (
+    echo MPC Server build failed, but will continue if image exists
+)
+docker build -t visio-service -f Dockerfile.visio . || (
+    echo Visio Service build failed, but will continue if image exists
+)
+
+REM Check if images exist regardless of build success
+echo Verifying images exist...
 docker image inspect mpc-server >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Error building MPC Server image. Image not created.
+    echo Error: MPC Server image does not exist. Cannot continue.
     goto menu
+) else (
+    echo MPC Server image verified.
 )
 
 docker image inspect visio-service >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Error building Visio Service image. Image not created.
+    echo Error: Visio Service image does not exist. Cannot continue.
     goto menu
+) else (
+    echo Visio Service image verified.
 )
-
-echo Cleaning up any existing containers...
-docker-compose -f docker-compose.full.yml down >nul 2>&1
 
 echo Starting Docker services (both MPC Server and Visio Service)...
 docker-compose -f docker-compose.full.yml up -d
+
+REM Verify containers are running
+echo Verifying containers are running...
+timeout /t 3 >nul
+docker ps | findstr "mpc-server" >nul
 if %errorlevel% neq 0 (
-    echo Error starting Docker services. See error message above.
-    goto menu
+    echo Warning: MPC Server container not found in running containers.
+    echo Attempting to start manually...
+    docker run -d --name mpc-server --network mpc-network -p 8050:8050 -e LOCAL_VISIO_SERVICE=http://visio-service:8051 mpc-server
+) else (
+    echo MPC Server container is running.
 )
-echo Docker services started successfully.
+
+docker ps | findstr "visio-service" >nul
+if %errorlevel% neq 0 (
+    echo Warning: Visio Service container not found in running containers.
+    echo Attempting to start manually...
+    docker run -d --name visio-service --network mpc-network -p 8051:8051 visio-service
+) else (
+    echo Visio Service container is running.
+)
+
+echo Docker services started. To see logs, run: docker logs mpc-server
 goto end
 
 :docker_mpc_local_visio
@@ -136,25 +168,24 @@ if %errorlevel% neq 0 (
     echo MPC Server image built or already exists.
 )
 
+echo Stopping any existing MPC server containers...
+docker stop mpc-server >nul 2>&1
+docker rm -f mpc-server >nul 2>&1
+
 echo Starting MPC Server in Docker...
-REM Try using docker-compose first
-docker-compose up -d mpc-server
+docker run -d --name mpc-server -p 8050:8050 -e LOCAL_VISIO_SERVICE=http://host.docker.internal:8051 mpc-server
 if %errorlevel% neq 0 (
-    echo Docker Compose failed, trying direct docker run command...
-    REM Stop any existing container with the same name
-    docker rm -f mpc-server >nul 2>&1
-    
-    REM Run the container directly
-    start cmd /k "docker run --name mpc-server -p 8050:8050 -e LOCAL_VISIO_SERVICE=http://host.docker.internal:8051 --rm mpc-server"
+    echo Error starting MPC Server with 'docker run'. Trying with docker-compose...
+    docker-compose up -d mpc-server
     
     if %errorlevel% neq 0 (
-        echo Error starting MPC Server container. See error message above.
+        echo All attempts to start MPC Server failed. See error messages above.
         goto menu
     ) else (
-        echo MPC Server container started with docker run.
+        echo MPC Server started successfully with docker-compose.
     )
 ) else (
-    echo MPC Server started successfully with docker-compose.
+    echo MPC Server container started successfully with 'docker run'.
 )
 goto end
 

@@ -1,0 +1,15 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Docker Setup
+
+The MPC Servers project supports multiple Docker deployment options:
+
+## Docker Files
+
+- **Dockerfile**: [Dockerfile](mdc:Dockerfile) - Linux container for MPC Server (Python 3.11)
+- **Dockerfile.visio**: [Dockerfile.visio](mdc:Dockerfile.visio) - Windows container for Visio Service
+- **docker-compose.yml**: [docker-compose.yml](mdc:docker-compose.yml) - Hybrid setup (MPC Server in Docker, Visio locally)
+- **docker-compose.full.yml**: [docker-compose.full.yml](mdc:docker-compose.full.yml) - Full setup (both services in Docker)

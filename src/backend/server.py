@@ -7,8 +7,8 @@ import logging
 import sys
 from typing import Dict, List, Any, Union, Optional
 
-from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import StreamingResponse, JSONResponse
 from sse_starlette.sse import EventSourceResponse
 import uvicorn
 
@@ -145,7 +145,9 @@ async def process_stream_message(message: Dict[str, Any]):
 @app.get("/health")
 async def health_check():
     """Simple health check endpoint for Docker."""
-    return {"status": "healthy", "service": "MPC Visio"}
+    return JSONResponse(
+        content={"status": "healthy", "service": "MPC Visio"}
+    )
 
 
 # SSE Transport

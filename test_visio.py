@@ -12,8 +12,8 @@ import sys
 # Add the src directory to the path
 sys.path.append(os.path.abspath("src"))
 
-# Define the MPC server URL (using port 8060)
-MPC_SERVER_URL = "http://localhost:8060/sse"
+# Define the MPC server URL (using port 8050)
+MPC_SERVER_URL = "http://localhost:8050/sse"
 
 # Default Visio file path
 DEFAULT_VISIO_FILE = "C:\\Programming\\MPC Servers\\examples\\test1.vsdx"
@@ -201,6 +201,7 @@ def main():
             print(f"    Text: {conn_text}")
             
         if not connections:
+            print("No connections found in the diagram.")
         # Extract shape information for later use
         diagram_result = result.get("result", {})
         pages = diagram_result.get("results", {}).get("pages", [])

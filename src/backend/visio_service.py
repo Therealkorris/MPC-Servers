@@ -239,7 +239,7 @@ class VisioService:
                     os.unlink(temp_file.name)
                 except:
                     pass
-                
+            
             # Only close the document if it was opened by this function call
             if doc is not None and should_close_doc and temp_file is not None:
                 try:
@@ -463,7 +463,7 @@ class VisioService:
                     os.unlink(temp_file.name)
                 except:
                     pass
-                
+            
             # Only close the document if it was opened by this function call
             if doc is not None and should_close_doc and temp_file is not None:
                 try:
@@ -915,7 +915,7 @@ class VisioService:
                     os.unlink(temp_file.name)
                 except:
                     pass
-                
+            
             # Only close the document if it was opened by this function call
             if doc is not None and should_close_doc and temp_file is not None:
                 try:

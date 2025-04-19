@@ -17,7 +17,7 @@ from pathlib import Path
 sys.path.append(os.path.abspath("src"))
 
 # Define the MPC server URL
-MPC_SERVER_URL = "http://localhost:8060/sse"
+MPC_SERVER_URL = "http://localhost:8050/sse"
 
 # Default Visio file path
 DEFAULT_VISIO_FILE = os.path.abspath("examples/test1.vsdx")
@@ -66,7 +66,10 @@ def get_active_document():
     # Try getting the active document through the API
     result = send_mpc_request("get_active_document")
     if "error" not in result and result.get("result", {}).get("status") == "success":
-        return result.get("result", {}).get("file_path")
+        file_path = result.get("result", {}).get("file_path")
+        print(f"Found active Visio document: {file_path}")
+        print(f"Document has {result.get('result', {}).get('pages_count', 0)} pages")
+        return file_path
     
     # If no active document, try using the default test file
     if os.path.exists(DEFAULT_VISIO_FILE):
@@ -175,7 +178,7 @@ def main():
     result = send_mpc_request("health")
     if "error" in result:
         print(f"MPC server not responding: {result['error']['message']}")
-        print("Please make sure the MPC server is running on port 8060")
+        print("Please make sure the MPC server is running on port 8050")
         return
     
     # Get the active document or prompt for a file path

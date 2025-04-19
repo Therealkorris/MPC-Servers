@@ -1,0 +1,38 @@
+services:
+  mpc-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.win
+    container_name: mpc-server
+    ports:
+      - "8050:8050"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8050
+      - TRANSPORT=sse
+      - LOCAL_VISIO_SERVICE=http://visio-service:8051
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - mpc-network
+
+  visio-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.visio
+    container_name: visio-service
+    ports:
+      - "8051:8051"
+    environment:
+      - VISIO_SERVICE_PORT=8051
+      - VISIO_SERVICE_HOST=0.0.0.0
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - mpc-network
+    volumes:
+      - ./examples:/app/examples
+
+networks:
+  mpc-network:
+    driver: bridge 

@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Backend Architecture
+
+The MPC Servers backend is built with FastAPI and follows a service-oriented architecture:
+
+## Core Components
+
+- **Server**: [server.py](mdc:src/backend/server.py) - Main entry point that processes MPC messages and routes them to services
+- **Visio Service**: [visio_service.py](mdc:src/backend/visio_service.py) - Handles all Visio-related operations via COM automation
+- **Ollama Service**: [ollama_service.py](mdc:src/backend/ollama_service.py) - AI integration service
+
+## API Patterns
+
+The server uses a JSON-RPC style API over different transports:
+- **SSE**: Server-Sent Events for real-time communication on port 8050
+- **STDIO**: Standard input/output for console-based applications
+
+## Visio Operations
+
+The backend can perform these operations on Visio diagrams:
+- Analyze diagram structure (shapes, connections, text)
+- Modify diagrams (add/update/delete shapes, create connections)
+- Verify connections between shapes
+
+## Docker Compatibility
+
+For Docker deployment, a mock Visio service [docker_visio_service.py](mdc:src/backend/docker_visio_service.py) forwards requests to a local Windows service running on port 8051.

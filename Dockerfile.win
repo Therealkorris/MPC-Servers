@@ -1,0 +1,65 @@
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+# Set up Python environment
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+# Install Python
+RUN Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.11.8/python-3.11.8-amd64.exe" -OutFile "python-3.11.8.exe" ; \
+    Start-Process python-3.11.8.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait ; \
+    Remove-Item python-3.11.8.exe
+
+# Verify Python installation
+RUN python --version; python -m pip --version
+
+# Check if curl exists - don't try to run curl --version as it doesn't work in PowerShell
+RUN if (Test-Path C:\Windows\System32\curl.exe) { \
+    Write-Host "curl already installed"; \
+    } else { \
+    Write-Host "Installing curl..."; \
+    Invoke-WebRequest -Uri "https://curl.se/windows/dl-8.4.0_3/curl-8.4.0_3-win64-mingw.zip" -OutFile "curl.zip"; \
+    Expand-Archive -Path curl.zip -DestinationPath C:\curl; \
+    Copy-Item -Path C:\curl\curl-8.4.0_3-win64-mingw\bin\curl.exe -Destination C:\Windows\System32\curl.exe; \
+    Remove-Item -Path curl.zip -Force; \
+    Remove-Item -Path C:\curl -Recurse -Force; \
+    }
+
+# Copy requirements.txt first for better layer caching
+COPY src/backend/requirements.txt ./requirements.txt
+
+# Create a filtered requirements file without fictitious packages
+RUN powershell -Command "Get-Content requirements.txt | Where-Object { -not ($_ -match 'fictitious package' -or $_ -match 'pyvismx' -or $_ -match 'ollama-python') } | Set-Content requirements.filtered.txt"
+
+# Install dependencies - Broken into separate RUN commands for Windows
+RUN python -m pip install --upgrade pip setuptools==59.6.0 wheel
+RUN python -m pip install --no-cache-dir -r requirements.filtered.txt
+RUN python -m pip install sse-starlette requests
+
+# Copy the server code
+COPY src/backend/server.py ./backend/server.py
+COPY src/backend/api ./backend/api/
+COPY src/backend/main.py ./backend/main.py
+COPY src/backend/ollama_service.py ./backend/ollama_service.py
+COPY src/backend/docker_visio_service.py ./backend/visio_service.py
+COPY src/run_mpc.py ./run_mpc.py
+
+# Create required directories
+RUN mkdir -p backend/uploads
+
+# Workdir
+WORKDIR /app
+
+# Expose the port used by the SSE transport
+EXPOSE 8050
+
+# Environment variables
+ENV HOST=0.0.0.0
+ENV PORT=8050
+ENV TRANSPORT=sse
+ENV LOCAL_VISIO_SERVICE=http://visio-service:8051
+ENV PYTHONUNBUFFERED=1
+
+# Health check - using PowerShell to check the endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD ["powershell", "-Command", "try { $response = Invoke-WebRequest -Uri http://localhost:8050/health -UseBasicParsing; if ($response.StatusCode -eq 200) { exit 0 } else { exit 1 } } catch { exit 1 }"]
+
+# Command to run the MPC server with SSE transport
+CMD ["python", "run_mpc.py", "--transport", "sse", "--host", "0.0.0.0", "--port", "8050"] 

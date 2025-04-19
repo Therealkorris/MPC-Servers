@@ -8,9 +8,12 @@ RUN apt-get update && apt-get install -y curl && apt-get clean && rm -rf /var/li
 # Copy requirements.txt first for better layer caching
 COPY src/backend/requirements.txt ./requirements.txt
 
+# Create a filtered requirements file without fictitious packages
+RUN grep -v "fictitious package" requirements.txt | grep -v "pyvismx" | grep -v "ollama-python" > requirements.filtered.txt
+
 # Install dependencies with compatible versions
 RUN pip install --upgrade pip setuptools==59.6.0 wheel && \
-    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements.filtered.txt && \
     pip install sse-starlette requests
 
 # Copy the server code

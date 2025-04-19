@@ -40,30 +40,38 @@ goto menu
 
 :docker_both
 echo Starting both services in Docker...
+echo.
+echo WARNING: This option requires Docker Desktop to be in Windows containers mode.
+echo Current containers might need to be stopped and removed first.
+echo.
+echo Please check that Docker Desktop is in Windows containers mode.
+echo (Right-click Docker icon in system tray and select "Switch to Windows containers...")
+echo.
+echo Press any key when ready to continue, or Ctrl+C to cancel...
+pause >nul
 
 REM Check if images exist
+echo Building MPC Server Docker image...
+docker build -t mpc-server -f Dockerfile .
+
+echo Building Visio Service Docker image...
+docker build -t visio-service -f Dockerfile.visio .
+
+REM Verify images exist
 docker image inspect mpc-server >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Building MPC Server Docker image...
-    docker build -t mpc-server -f Dockerfile .
-    if not exist mpc-server (
-        echo Error building MPC Server image. Image not created.
-        goto menu
-    )
+    echo Error building MPC Server image. Image not created.
+    goto menu
 )
 
 docker image inspect visio-service >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Building Visio Service Docker image...
-    docker build -t visio-service -f Dockerfile.visio .
-    if not exist visio-service (
-        echo Error building Visio Service image. Image not created.
-        goto menu
-    )
+    echo Error building Visio Service image. Image not created.
+    goto menu
 )
 
-echo Starting Docker services...
-docker-compose up -d
+echo Starting Docker services (both MPC Server and Visio Service)...
+docker-compose -f docker-compose.full.yml up -d
 if %errorlevel% neq 0 (
     echo Error starting Docker services. See error message above.
     goto menu
@@ -93,12 +101,25 @@ if %errorlevel% neq 0 (
 )
 
 echo Starting MPC Server in Docker...
+REM Try using docker-compose first
 docker-compose up -d mpc-server
 if %errorlevel% neq 0 (
-    echo Error starting MPC Server. See error message above.
-    goto menu
+    echo Docker Compose failed, trying direct docker run command...
+    REM Stop any existing container with the same name
+    docker rm -f mpc-server >nul 2>&1
+    
+    REM Run the container directly
+    start cmd /k "docker run --name mpc-server -p 8050:8050 -e LOCAL_VISIO_SERVICE=http://host.docker.internal:8051 --rm mpc-server"
+    
+    if %errorlevel% neq 0 (
+        echo Error starting MPC Server container. See error message above.
+        goto menu
+    ) else (
+        echo MPC Server container started with docker run.
+    )
+) else (
+    echo MPC Server started successfully with docker-compose.
 )
-echo MPC Server started successfully in Docker.
 goto end
 
 :local_both

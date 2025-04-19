@@ -1,0 +1,16 @@
+fastapi==0.103.0
+uvicorn==0.23.2
+pydantic==2.3.0
+python-multipart==0.0.6
+aiofiles==23.2.1
+numpy==1.25.2
+pillow==10.0.0
+python-dotenv==1.0.0
+httpx==0.24.1
+opencv-python==4.8.0.76
+pyvismx==0.1.0  # Visio file handling (fictitious package - replace with actual)
+ollama-python==0.1.2  # Ollama client (fictitious package - replace with actual)
+
+# Testing dependencies
+pytest==7.4.0
+pytest-asyncio==0.21.1 

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "visio": {
+      "transport": "sse",
+      "url": "http://localhost:8050/sse",
+      "serverUrl": "http://localhost:8050/sse"
+    }
+  }
+} 

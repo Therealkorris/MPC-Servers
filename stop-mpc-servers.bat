@@ -5,7 +5,7 @@ echo Stopping Docker container...
 docker-compose down
 
 echo Stopping local Visio service...
-taskkill /F /FI "WINDOWTITLE eq run_visio_service.py*" /T
+taskkill /F /IM pythonw.exe /FI "WINDOWTITLE ne Administrator:*"
 
 echo Servers have been stopped.
 echo. 

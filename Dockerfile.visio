@@ -3,17 +3,18 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022
 # Set up Python environment
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
-# Install Python
-RUN Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe" -OutFile "python-3.12.0.exe" ; \
-    Start-Process python-3.12.0.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait ; \
-    Remove-Item python-3.12.0.exe
+# Install Python 3.11 instead of 3.12
+RUN Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.11.8/python-3.11.8-amd64.exe" -OutFile "python-3.11.8.exe" ; \
+    Start-Process python-3.11.8.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait ; \
+    Remove-Item python-3.11.8.exe
 
 # Verify Python installation
 RUN python --version; pip --version
 
 # Install dependencies
 COPY src/backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt && \
+RUN pip install --upgrade pip setuptools==59.6.0 wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
     pip install fastapi uvicorn pywin32 python-multipart aiofiles
 
 # Create app directory and required structure
@@ -30,6 +31,7 @@ EXPOSE 8051
 # Set environment variables
 ENV VISIO_SERVICE_PORT=8051
 ENV VISIO_SERVICE_HOST=0.0.0.0
+ENV PYTHONUNBUFFERED=1
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

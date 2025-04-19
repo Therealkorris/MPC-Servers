@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y curl && apt-get clean && rm -rf /var/li
 # Copy requirements.txt first for better layer caching
 COPY src/backend/requirements.txt ./requirements.txt
 
-# Install dependencies
-RUN pip install --upgrade pip setuptools wheel && \
+# Install dependencies with compatible versions
+RUN pip install --upgrade pip setuptools==59.6.0 wheel && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install sse-starlette requests
 
@@ -32,6 +32,7 @@ ENV HOST=0.0.0.0
 ENV PORT=8050
 ENV TRANSPORT=sse
 ENV LOCAL_VISIO_SERVICE=http://host.docker.internal:8051
+ENV PYTHONUNBUFFERED=1
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

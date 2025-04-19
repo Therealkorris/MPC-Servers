@@ -1,14 +1,23 @@
 # MPC Server Docker Setup
 
-This document explains how to run the MPC server in Docker containers while keeping Visio-related functionality accessible.
+This document explains how to run the MPC server in a Docker container while keeping Visio operations working properly.
 
-## Architecture
+## Architecture Options
 
-The setup consists of two components:
+There are three setup options available:
 
-1. **MPC Server (Linux Container)**: Handles API requests, runs the server with SSE transport. Forwards Visio-related operations to the local Visio service.
+1. **Full Docker Setup**: Both MPC Server and Visio Service run in Docker containers
+   - Requires Docker Desktop with Windows containers support
+   - Limited Visio functionality due to containerization constraints
 
-2. **Visio Service (Local or Windows Container)**: Handles actual Visio operations using COM interfaces.
+2. **Hybrid Setup (Recommended)**: MPC Server in Docker, Visio Service runs locally
+   - MPC Server runs in a Linux container
+   - Visio Service runs directly on your Windows host with full access to Visio
+   - Communications occur via localhost network
+
+3. **Fully Local Setup**: Both services run directly on your Windows host
+   - Simplest setup if you don't need Docker isolation
+   - Both services have full access to local resources
 
 ## Prerequisites
 
@@ -17,64 +26,56 @@ The setup consists of two components:
 - Microsoft Visio installed locally
 - Required Python packages installed locally: `fastapi`, `uvicorn`, `win32com`
 
-## Options for Running
+## Running the Services
 
-You can run the setup in two different configurations:
+### Quick Start (Using Batch Scripts)
 
-### Option 1: MPC Server in Docker, Visio Service locally
-
-This is the simplest approach and recommended if you just want to run the MPC server in the background.
-
-#### 1. Start the Local Visio Service
+The simplest way to start the services is using the provided batch script:
 
 ```bash
-# From the project root directory
+# Start the services with options menu
+start-mpc-servers.bat
+```
+
+This will show a menu where you can choose how to run the services.
+
+To stop the services:
+
+```bash
+# Stop the services with options menu
+stop-mpc-servers.bat
+```
+
+### Manual Setup
+
+If you prefer to start services manually:
+
+#### Option 1: Full Docker Setup
+
+```bash
+# Start both services in Docker
+docker-compose up -d
+```
+
+#### Option 2: Hybrid Setup (Recommended)
+
+```bash
+# Start the local Visio service
 python run_visio_service.py
+
+# In another terminal, start the MPC Server container
+docker-compose up -d mpc-server
 ```
 
-This will start a service on port 8052 that can handle Visio operations.
-
-#### 2. Start the MPC Server Container
+#### Option 3: Fully Local Setup
 
 ```bash
-# From the project root directory
-docker-compose up -d
+# Start the local Visio service
+python run_visio_service.py
+
+# In another terminal, start the MPC Server locally
+python src/run_mpc.py --transport sse --host 0.0.0.0 --port 8050
 ```
-
-This will run the MPC server in a Docker container, which forwards Visio requests to your local machine.
-
-### Option 2: Both Services in Docker (Experimental)
-
-This requires Docker to run Windows containers, which may be challenging to set up.
-
-1. Switch Docker Desktop to Windows containers
-2. Uncomment the visio-service section in docker-compose.yml
-3. Run both services:
-
-```bash
-docker-compose up -d
-```
-
-Note: This option is experimental and requires Microsoft Visio to be installed in the Windows container, which may have licensing implications.
-
-## Using the Batch Files
-
-For convenience, you can use the provided batch files:
-
-- `start-mpc-servers.bat`: Starts both the local Visio service and the MPC server container
-- `stop-mpc-servers.bat`: Stops both services
-
-## Running the Visio Service Without a Visible Window
-
-By default, the Visio service opens a command window when it runs. If you prefer to have it run invisibly, there are two options:
-
-1. **Using pythonw.exe (Simple)**: The updated batch files now use pythonw.exe to run the service without a visible window.
-
-2. **As a Windows Service (Advanced)**: For a more permanent solution, you can install the Visio service as a Windows service:
-   - Run `install_service.bat` to install
-   - Control the service with `python install_as_service.py [start|stop|remove]`
-
-See `HIDDEN_SERVICE.md` for more details on these options.
 
 ## Testing the Setup
 
@@ -85,17 +86,25 @@ You can test the setup by running one of the Visio scripts:
 python test_connect.py
 ```
 
+## Port Configuration
+
+- MPC Server: Port 8050
+- Visio Service: Port 8051
+
 ## Troubleshooting
 
-- If you cannot connect to the Docker container from your scripts, ensure the port mapping is correct in docker-compose.yml.
-- If the Docker container cannot communicate with the local Visio service, ensure your Docker Desktop settings allow host communication (`http://host.docker.internal:8052`).
-- Check logs with `docker-compose logs mpc-server`.
-- Make sure your local Visio service is running before starting the Docker container.
-- For Windows containers, ensure proper licensing and installation of Microsoft Visio in the container.
+- **Docker Containers Not Starting**: Check Docker logs with `docker-compose logs`
+- **Container Can't Reach Local Service**: Ensure Docker Desktop settings allow host.docker.internal
+- **Visio Service Errors**: Ensure Visio is properly installed and accessible
+- **Visio Not Visible**: If using the Visio service locally, opening the Visio file may work better
+- **Windows Containers Issues**: If using Option 1, ensure Windows containers are enabled in Docker Desktop
 
-## File Paths
+## Docker Switching Between Linux/Windows Containers
 
-The Docker containers have access to the local file system through volume mounts:
+If you need to switch between Linux and Windows containers:
 
-- `/app/examples` in the container maps to `./examples` on your host machine
-- This allows the containers to access Visio files in your local examples directory 
+1. Right-click Docker Desktop icon in the system tray
+2. Select "Switch to Windows containers..." or "Switch to Linux containers..."
+3. Allow Docker to restart
+
+Note: Option 1 requires Windows containers, while Option 2 works with Linux containers (recommended). 

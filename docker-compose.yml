@@ -12,31 +12,28 @@ services:
       - HOST=0.0.0.0
       - PORT=8050
       - TRANSPORT=sse
-      - LOCAL_VISIO_SERVICE=http://host.docker.internal:8052
+      - LOCAL_VISIO_SERVICE=http://host.docker.internal:8051
     restart: unless-stopped
-    volumes:
-      - ./examples:/app/examples:ro
     networks:
       - mpc-network
+    depends_on:
+      - visio-service
 
-  # Note: Visio service requires Windows with Visio installed
-  # Uncomment this section if you have Docker Windows containers enabled
-  # and Microsoft Visio installed
-  #visio-service:
-  #  build:
-  #    context: .
-  #    dockerfile: Dockerfile.visio
-  #  container_name: visio-service
-  #  ports:
-  #    - "8051:8051"
-  #  environment:
-  #    - VISIO_SERVICE_HOST=0.0.0.0
-  #    - VISIO_SERVICE_PORT=8051
-  #  restart: unless-stopped
-  #  volumes:
-  #    - ./examples:/app/examples
-  #  networks:
-  #    - mpc-network
+  # Optional: Only run this if you want the Visio service in a container
+  # Note: This requires Windows containers and may have limitations
+  # For most users, running the Visio service directly on the host is recommended
+  visio-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.visio
+    container_name: visio-service
+    ports:
+      - "8051:8051"
+    restart: unless-stopped
+    networks:
+      - mpc-network
+    volumes:
+      - ./examples:/app/examples
 
 networks:
   mpc-network:

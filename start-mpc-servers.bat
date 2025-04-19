@@ -20,6 +20,9 @@ if %errorlevel% neq 0 (
     )
 )
 
+REM Track if Visio service is already running to avoid starting it twice
+set VISIO_SERVICE_RUNNING=0
+
 :menu
 echo.
 echo Choose an option:
@@ -38,17 +41,40 @@ if "%choice%"=="4" goto exit
 echo Invalid choice. Please try again.
 goto menu
 
+:check_and_switch_to_windows
+REM Check if we're in Windows container mode
+docker version --format "{{.Server.Os}}" | findstr /C:"windows" >nul
+if %errorlevel% neq 0 (
+    echo Detected Linux containers. Switching to Windows containers...
+    echo This may take a moment and Docker might restart.
+    
+    REM Use PowerShell to switch container mode
+    powershell -Command "& 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchDaemon"
+    
+    REM Wait for Docker to restart
+    echo Waiting for Docker to restart in Windows container mode...
+    timeout /t 15
+    
+    REM Verify switch worked
+    docker version --format "{{.Server.Os}}" | findstr /C:"windows" >nul
+    if %errorlevel% neq 0 (
+        echo Failed to switch to Windows containers.
+        echo Please switch manually: right-click Docker icon, select "Switch to Windows containers..."
+        echo Press any key when ready...
+        pause >nul
+    ) else (
+        echo Successfully switched to Windows containers.
+    )
+)
+goto :eof
+
 :docker_both
+REM Switch to Windows containers if needed
+call :check_and_switch_to_windows
+
 echo Starting both services in Docker...
 echo.
-echo WARNING: This option requires Docker Desktop to be in Windows containers mode.
-echo Current containers might need to be stopped and removed first.
-echo.
-echo Please check that Docker Desktop is in Windows containers mode.
-echo (Right-click Docker icon in system tray and select "Switch to Windows containers...")
-echo.
-echo Press any key when ready to continue, or Ctrl+C to cancel...
-pause >nul
+echo Using Windows containers for Visio service...
 
 REM Check if images exist
 echo Building MPC Server Docker image...
@@ -70,6 +96,9 @@ if %errorlevel% neq 0 (
     goto menu
 )
 
+echo Cleaning up any existing containers...
+docker-compose -f docker-compose.full.yml down >nul 2>&1
+
 echo Starting Docker services (both MPC Server and Visio Service)...
 docker-compose -f docker-compose.full.yml up -d
 if %errorlevel% neq 0 (
@@ -80,9 +109,16 @@ echo Docker services started successfully.
 goto end
 
 :docker_mpc_local_visio
-echo Starting Visio Service locally...
-start cmd /k "python run_visio_service.py"
-echo.
+REM Only start Visio service if it's not already running
+if %VISIO_SERVICE_RUNNING%==0 (
+    echo Starting Visio Service locally...
+    start cmd /k "python run_visio_service.py"
+    set VISIO_SERVICE_RUNNING=1
+    echo.
+) else (
+    echo Visio Service is already running.
+    echo.
+)
 
 echo Checking if MPC Server Docker image exists...
 docker image inspect mpc-server >nul 2>&1
@@ -123,9 +159,17 @@ if %errorlevel% neq 0 (
 goto end
 
 :local_both
-echo Starting Visio Service locally...
-start cmd /k "python run_visio_service.py"
-echo.
+REM Only start Visio service if it's not already running
+if %VISIO_SERVICE_RUNNING%==0 (
+    echo Starting Visio Service locally...
+    start cmd /k "python run_visio_service.py"
+    set VISIO_SERVICE_RUNNING=1
+    echo.
+) else (
+    echo Visio Service is already running.
+    echo.
+)
+
 echo Starting MPC Server locally...
 start cmd /k "python src/run_mpc.py --transport sse --host 0.0.0.0 --port 8050"
 goto end

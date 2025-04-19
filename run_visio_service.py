@@ -35,6 +35,14 @@ async def analyze_visio_diagram(request: Request):
     """Analyze a Visio diagram."""
     data = await request.json()
     file_path_or_content = data.get("file_path_or_content")
+    
+    # Handle file paths from Docker container
+    if isinstance(file_path_or_content, str) and file_path_or_content.startswith("/app/"):
+        # Convert Docker container path to local Windows path
+        relative_path = file_path_or_content.replace("/app/", "")
+        file_path_or_content = os.path.join(os.getcwd(), relative_path)
+        logger.info(f"Converted Docker path to local path: {file_path_or_content}")
+    
     analysis_type = data.get("analysis_type", "structure")
     result = visio_service.analyze_visio_diagram(file_path_or_content, analysis_type)
     return result
@@ -44,6 +52,14 @@ async def modify_visio_diagram(request: Request):
     """Modify a Visio diagram."""
     data = await request.json()
     file_path_or_content = data.get("file_path_or_content")
+    
+    # Handle file paths from Docker container
+    if isinstance(file_path_or_content, str) and file_path_or_content.startswith("/app/"):
+        # Convert Docker container path to local Windows path
+        relative_path = file_path_or_content.replace("/app/", "")
+        file_path_or_content = os.path.join(os.getcwd(), relative_path)
+        logger.info(f"Converted Docker path to local path: {file_path_or_content}")
+    
     modification_instructions = data.get("modification_instructions")
     result = visio_service.modify_visio_diagram(file_path_or_content, modification_instructions)
     return result
@@ -59,6 +75,14 @@ async def verify_connections(request: Request):
     """Verify connections in a Visio diagram."""
     data = await request.json()
     file_path_or_content = data.get("file_path_or_content")
+    
+    # Handle file paths from Docker container
+    if isinstance(file_path_or_content, str) and file_path_or_content.startswith("/app/"):
+        # Convert Docker container path to local Windows path
+        relative_path = file_path_or_content.replace("/app/", "")
+        file_path_or_content = os.path.join(os.getcwd(), relative_path)
+        logger.info(f"Converted Docker path to local path: {file_path_or_content}")
+    
     connection_attempts = data.get("connection_attempts", [])
     result = visio_service.verify_connections(file_path_or_content, connection_attempts)
     return result
@@ -69,6 +93,14 @@ async def generate_visio_diagram(request: Request):
     data = await request.json()
     instructions = data.get("instructions")
     template = data.get("template")
+    
+    # Handle template path from Docker container
+    if isinstance(template, str) and template.startswith("/app/"):
+        # Convert Docker container path to local Windows path
+        relative_path = template.replace("/app/", "")
+        template = os.path.join(os.getcwd(), relative_path)
+        logger.info(f"Converted Docker template path to local path: {template}")
+    
     result = visio_service.generate_visio_diagram(instructions, template)
     return result
 

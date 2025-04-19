@@ -1,8 +1,4 @@
-# Git
-.git
-.gitignore
-
-# Python
+# Python cache files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -36,23 +32,17 @@ env/
 *.swo
 
 # Docker
-Dockerfile
-docker-compose.yml
 .dockerignore
+docker-compose.override.yml
 
-# Example files
-examples/
+# Local files
+uploads/
+.env
+*.log
+
+# Visio temporary files
+~$*.vsdx
 
 # Test files
-**/tests/
 .coverage
-htmlcov/
-
-# Local scripts that use Visio
-edit_visio.py
-test_visio.py
-test_connect.py
-
-# Documentation
-*.md
-LICENSE 
+htmlcov/ 

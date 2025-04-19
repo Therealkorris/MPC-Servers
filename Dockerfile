@@ -1,29 +1,33 @@
-# Use a Windows-based Python image
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+FROM python:3.12-slim
 
-# Install Python
-RUN Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.1/python-3.12.1-amd64.exe" -OutFile "python-3.12.1-amd64.exe" ; \
-    Start-Process -FilePath "python-3.12.1-amd64.exe" -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -Wait ; \
-    Remove-Item -Path "python-3.12.1-amd64.exe"
-
-# Copy application files
 WORKDIR /app
-COPY src /app/src
-COPY examples /app/examples
-COPY mpc-config.json /app/mpc-config.json
-COPY run.py /app/run.py
-COPY requirements.txt /app/requirements.txt
 
-# Install dependencies
-RUN python -m pip install --upgrade pip && \
-    pip install -r requirements.txt
+# Copy requirements.txt first for better layer caching
+COPY src/backend/requirements.txt ./requirements.txt
 
-# Note: The container won't have access to Visio unless the host system's Visio
-# is explicitly shared with the container, which is complex in practice.
-# This image is primarily for running the backend services that don't require
-# direct Visio interaction.
+# Install dependencies but exclude win32com (Visio-related) packages
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install sse-starlette
 
-# Set the entrypoint to run the MPC server
-ENTRYPOINT ["python", "run.py"]
-CMD ["--transport", "sse", "--host", "0.0.0.0", "--port", "8050"] 
+# Copy the server code
+COPY src/backend/server.py ./backend/server.py
+COPY src/backend/api ./backend/api/
+COPY src/backend/main.py ./backend/main.py
+COPY src/backend/ollama_service.py ./backend/ollama_service.py
+COPY src/backend/docker_visio_service.py ./backend/visio_service.py
+COPY src/run_mpc.py ./run_mpc.py
+
+# Create required directories
+RUN mkdir -p backend/uploads
+
+# Expose the port used by the SSE transport
+EXPOSE 8050
+
+# Environment variables
+ENV HOST=0.0.0.0
+ENV PORT=8050
+ENV TRANSPORT=sse
+ENV LOCAL_VISIO_SERVICE=http://host.docker.internal:8051
+
+# Command to run the MPC server with SSE transport
+CMD ["python", "run_mpc.py", "--transport", "sse", "--host", "0.0.0.0", "--port", "8050"] 

@@ -1,13 +1,14 @@
 # MPC Server Docker Setup
 
-This document explains how to run the MPC server in a Docker container while keeping Visio-related functionality running locally on your Windows machine.
+This document explains how to run the MPC server in Docker containers while keeping Visio-related functionality accessible.
 
 ## Architecture
 
 The setup consists of two components:
 
-1. **MPC Server (Docker Container)**: Handles API requests, runs the server with SSE transport.
-2. **Local Visio Service (Windows)**: Handles actual Visio operations using COM interfaces.
+1. **MPC Server (Linux Container)**: Handles API requests, runs the server with SSE transport. Forwards Visio-related operations to the local Visio service.
+
+2. **Visio Service (Local or Windows Container)**: Handles actual Visio operations using COM interfaces.
 
 ## Prerequisites
 
@@ -16,11 +17,15 @@ The setup consists of two components:
 - Microsoft Visio installed locally
 - Required Python packages installed locally: `fastapi`, `uvicorn`, `win32com`
 
-## Running the Setup
+## Options for Running
 
-### 1. Start the Local Visio Service
+You can run the setup in two different configurations:
 
-First, start the local Visio service that will handle actual Visio operations:
+### Option 1: MPC Server in Docker, Visio Service locally
+
+This is the simplest approach and recommended if you just want to run the MPC server in the background.
+
+#### 1. Start the Local Visio Service
 
 ```bash
 # From the project root directory
@@ -29,18 +34,37 @@ python run_visio_service.py
 
 This will start a service on port 8051 that can handle Visio operations.
 
-### 2. Start the MPC Server Container
-
-Using Docker Compose:
+#### 2. Start the MPC Server Container
 
 ```bash
 # From the project root directory
 docker-compose up -d
 ```
 
-This will build the Docker image (if needed) and start the MPC server container.
+This will run the MPC server in a Docker container, which forwards Visio requests to your local machine.
 
-### 3. Testing the Setup
+### Option 2: Both Services in Docker (Experimental)
+
+This requires Docker to run Windows containers, which may be challenging to set up.
+
+1. Switch Docker Desktop to Windows containers
+2. Uncomment the visio-service section in docker-compose.yml
+3. Run both services:
+
+```bash
+docker-compose up -d
+```
+
+Note: This option is experimental and requires Microsoft Visio to be installed in the Windows container, which may have licensing implications.
+
+## Using the Batch Files
+
+For convenience, you can use the provided batch files:
+
+- `start-mpc-servers.bat`: Starts both the local Visio service and the MPC server container
+- `stop-mpc-servers.bat`: Stops both services
+
+## Testing the Setup
 
 You can test the setup by running one of the Visio scripts:
 
@@ -55,12 +79,11 @@ python test_connect.py
 - If the Docker container cannot communicate with the local Visio service, ensure your Docker Desktop settings allow host communication (`http://host.docker.internal:8051`).
 - Check logs with `docker-compose logs mpc-server`.
 - Make sure your local Visio service is running before starting the Docker container.
+- For Windows containers, ensure proper licensing and installation of Microsoft Visio in the container.
 
-## Stopping the Services
+## File Paths
 
-```bash
-# Stop the Docker container
-docker-compose down
+The Docker containers have access to the local file system through volume mounts:
 
-# Stop the local Visio service with Ctrl+C in its terminal
-``` 
+- `/app/examples` in the container maps to `./examples` on your host machine
+- This allows the containers to access Visio files in your local examples directory 

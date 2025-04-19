@@ -106,7 +106,7 @@ async def generate_visio_diagram(request: Request):
 
 def main():
     """Main entry point."""
-    port = int(os.environ.get("VISIO_SERVICE_PORT", "8051"))
+    port = int(os.environ.get("VISIO_SERVICE_PORT", "8052"))
     host = os.environ.get("VISIO_SERVICE_HOST", "127.0.0.1")
     
     logger.info(f"Starting local Visio service on {host}:{port}")

@@ -12,7 +12,7 @@ services:
       - HOST=0.0.0.0
       - PORT=8050
       - TRANSPORT=sse
-      - LOCAL_VISIO_SERVICE=http://host.docker.internal:8051
+      - LOCAL_VISIO_SERVICE=http://host.docker.internal:8052
     restart: unless-stopped
     volumes:
       - ./examples:/app/examples:ro

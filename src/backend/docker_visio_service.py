@@ -11,7 +11,7 @@ import base64
 logger = logging.getLogger(__name__)
 
 # The address of the local machine running the actual Visio service
-LOCAL_VISIO_SERVICE = os.environ.get("LOCAL_VISIO_SERVICE", "http://host.docker.internal:8051")
+LOCAL_VISIO_SERVICE = os.environ.get("LOCAL_VISIO_SERVICE", "http://host.docker.internal:8052")
 
 class VisioService:
     """Mock Visio service that forwards requests to a local Visio service."""

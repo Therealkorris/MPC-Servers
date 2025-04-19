@@ -27,14 +27,20 @@ echo.
 
 echo Building MPC Server Docker image...
 docker build -t mpc-server -f Dockerfile .
+
+REM Verify image now exists
+docker image inspect mpc-server >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Error building MPC Server image. See error message above.
+    echo Error building MPC Server image. Image not created.
     echo Press any key to exit...
     pause >nul
     exit /b 1
+) else (
+    echo MPC Server image built successfully.
 )
 
 echo Running MPC Server in Docker...
+docker rm -f mpc-server >nul 2>&1
 docker run --name mpc-server -p 8050:8050 -e LOCAL_VISIO_SERVICE=http://host.docker.internal:8051 --rm mpc-server
 if %errorlevel% neq 0 (
     echo Error running MPC Server. See error message above.

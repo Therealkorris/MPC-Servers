@@ -46,8 +46,8 @@ docker image inspect mpc-server >nul 2>&1
 if %errorlevel% neq 0 (
     echo Building MPC Server Docker image...
     docker build -t mpc-server -f Dockerfile .
-    if %errorlevel% neq 0 (
-        echo Error building MPC Server image. See error message above.
+    if not exist mpc-server (
+        echo Error building MPC Server image. Image not created.
         goto menu
     )
 )
@@ -56,8 +56,8 @@ docker image inspect visio-service >nul 2>&1
 if %errorlevel% neq 0 (
     echo Building Visio Service Docker image...
     docker build -t visio-service -f Dockerfile.visio .
-    if %errorlevel% neq 0 (
-        echo Error building Visio Service image. See error message above.
+    if not exist visio-service (
+        echo Error building Visio Service image. Image not created.
         goto menu
     )
 )
@@ -81,10 +81,15 @@ docker image inspect mpc-server >nul 2>&1
 if %errorlevel% neq 0 (
     echo Building MPC Server Docker image...
     docker build -t mpc-server -f Dockerfile .
-    if %errorlevel% neq 0 (
-        echo Error building MPC Server image. See error message above.
-        goto menu
-    )
+)
+
+REM Verify image now exists
+docker image inspect mpc-server >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Error building MPC Server image. Image not created.
+    goto menu
+) else (
+    echo MPC Server image built or already exists.
 )
 
 echo Starting MPC Server in Docker...
